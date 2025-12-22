@@ -12,11 +12,11 @@ from datetime import datetime, timedelta
 # --------------------------------------------------
 st.set_page_config(
     page_title="Daily Log",
-    page_icon="📝",
+    page_icon="®",
     layout="centered"
 )
 
-st.title("📝 Daily Log")
+st.title("Log")
 
 # --------------------------------------------------
 # Google Sheets connection
@@ -120,7 +120,7 @@ def reflection_wordcount_stats(df, current_reflection):
 # Streak metric
 # --------------------------------------------------
 daily_streak = calculate_daily_streak(df["date"].tolist() if not df.empty else [])
-st.metric("🔥 Daily entry streak", f"{daily_streak} days")
+st.metric("Consecutive entries", f"{daily_streak} days")
 
 st.divider()
 
@@ -196,14 +196,14 @@ if submitted:
         ]
 
         worksheet.append_row(row)
-        st.success("✅ Entry saved")
+        st.success("Entry saved")
         st.rerun()
 
 # --------------------------------------------------
 # Summary section
 # --------------------------------------------------
 st.divider()
-st.subheader("📊 Daily Summary")
+st.subheader("Daily Summary")
 
 # Activity streaks
 streaks = activity_streaks(df)
@@ -211,7 +211,7 @@ streaks = activity_streaks(df)
 if streaks:
     st.markdown("**Activity streaks (≥ 3 days):**")
     for activity, days in streaks.items():
-        st.write(f"🔥 {activity}: {days} days")
+        st.write(f"{activity}: {days} days")
 else:
     st.write("No activity streaks of 3+ days yet.")
 
@@ -233,7 +233,7 @@ else:
 # Recent entries
 # --------------------------------------------------
 st.divider()
-st.subheader("📅 Recent entries")
+st.subheader("Recent entries")
 
 if not df.empty:
     st.dataframe(
