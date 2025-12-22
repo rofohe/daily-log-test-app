@@ -5,7 +5,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
 
 
-st.write("Loaded secrets:", list(st.secrets.keys()))
+#st.write("Loaded secrets:", list(st.secrets.keys()))
 
 # --------------------------------------------------
 # Page config
