@@ -4,9 +4,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
 
-
-#st.write("Loaded secrets:", list(st.secrets.keys()))
-
 # --------------------------------------------------
 # Page config
 # --------------------------------------------------
@@ -44,17 +41,18 @@ if not df.empty:
     df["activities"] = df["activities"].fillna("")
 
 # --------------------------------------------------
-# Activity configuration
+# Activity configuration (NEW)
 # --------------------------------------------------
-activities_options = [
-    "Sleep",
-    "Hygiene",
-    "Diet",
-    "Family & House",
-    "Sobriety",
-    "Productivity",
-    "Self-actualisation"
-]
+ACTIVITIES = {
+    "Sleep": ["deep sleep", "mindfulness", "rested"],
+    "Hygiene": ["shower", "shave", "clean clothes", "hair", "teeth"],
+    "Diet": ["hydrated", "fruits", "veggies", "not overeating", "supplements", "home made"],
+    "Family & House": ["routines", "clean", "decorate", "play", "teach"],
+    "Exercise": ["yoga", "pull ups", "biking", "hiking", "running"],
+    "Sobriety": ["abstinence", "special occasion", "controlled"],
+    "Productivity": ["reading", "journal notes", "german", "coding"],
+    "Self-actualisation": ["confidence", "eye contact", "engaged", "agency", "happy"]
+}
 
 # --------------------------------------------------
 # Helpers
@@ -83,7 +81,7 @@ def activity_streaks(df):
 
     streaks = {}
 
-    for activity in activities_options:
+    for activity in ACTIVITIES.keys():
         dates = df[df["activities"].str.contains(activity, na=False)]["date"].tolist()
         if not dates:
             continue
@@ -131,30 +129,31 @@ with st.form("daily_log_form", clear_on_submit=True):
 
     st.subheader("Activities")
 
-    cols = st.columns(len(activities_options))
-    activity_values = {}
+    activity_results = {}
 
-    for col, activity in zip(cols, activities_options):
-        with col:
-            activity_values[activity] = st.checkbox(activity)
+    for category, components in ACTIVITIES.items():
+        with st.container():
+            st.markdown(f"### {category}")
+
+            checked = []
+            for comp in components:
+                if st.checkbox(comp, key=f"{category}_{comp}"):
+                    checked.append(comp)
+
+            percent = int((len(checked) / len(components)) * 100)
+            st.progress(percent)
+            st.caption(f"{percent}% fulfilled")
+
+            activity_results[category] = checked
+
+        st.divider()
 
     st.subheader("Body metrics")
 
     weight = st.number_input("Weight", min_value=0.0, step=0.1)
 
-    waist_in = st.number_input(
-        "Waist (in)",
-        min_value=1.0,
-        max_value=2.0,
-        step=0.01
-    )
-
-    waist_out = st.number_input(
-        "Waist (out)",
-        min_value=1.0,
-        max_value=2.0,
-        step=0.01
-    )
+    waist_in = st.number_input("Waist (in)", min_value=1.0, max_value=2.0, step=0.01)
+    waist_out = st.number_input("Waist (out)", min_value=1.0, max_value=2.0, step=0.01)
 
     st.subheader("Wellbeing")
 
@@ -162,10 +161,7 @@ with st.form("daily_log_form", clear_on_submit=True):
 
     st.subheader("Reflection")
 
-    reflection = st.text_area(
-        "Write freely about today",
-        height=140
-    )
+    reflection = st.text_area("Write freely about today", height=140)
 
     submitted = st.form_submit_button("Save entry")
 
@@ -179,15 +175,16 @@ if submitted:
     if not df.empty and today in df["date"].values:
         st.warning("You already logged an entry for today.")
     else:
-        selected_activities = [
-            name for name, checked in activity_values.items() if checked
-        ]
+        activity_strings = []
+        for cat, comps in activity_results.items():
+            if comps:
+                activity_strings.append(f"{cat}: {'|'.join(comps)}")
 
         row = [
             now.isoformat(),
             today.isoformat(),
             now.strftime("%A"),
-            ", ".join(selected_activities),
+            "; ".join(activity_strings),
             weight,
             waist_in,
             waist_out,
@@ -205,7 +202,6 @@ if submitted:
 st.divider()
 st.subheader("Daily Summary")
 
-# Activity streaks
 streaks = activity_streaks(df)
 
 if streaks:
@@ -215,17 +211,16 @@ if streaks:
 else:
     st.write("No activity streaks of 3+ days yet.")
 
-# Reflection stats
 current_wc, last_wc = reflection_wordcount_stats(df, reflection)
 
 if last_wc is not None:
     diff = current_wc - last_wc
     if diff > 0:
-        st.success(f"Reflection word count: {current_wc} words (⬆️ +{diff} vs last entry)")
+        st.success(f"Reflection word count: {current_wc} words (⬆️ +{diff})")
     elif diff < 0:
-        st.info(f"Reflection word count: {current_wc} words (⬇️ {abs(diff)} vs last entry)")
+        st.info(f"Reflection word count: {current_wc} words (⬇️ {abs(diff)})")
     else:
-        st.write(f"Reflection word count: {current_wc} words (same as last entry)")
+        st.write(f"Reflection word count: {current_wc} words (no change)")
 else:
     st.write(f"Reflection word count: {current_wc} words")
 
@@ -236,9 +231,6 @@ st.divider()
 st.subheader("Recent entries")
 
 if not df.empty:
-    st.dataframe(
-        df.sort_values("date", ascending=False).head(7),
-        use_container_width=True
-    )
+    st.dataframe(df.sort_values("date", ascending=False).head(7), use_container_width=True)
 else:
     st.info("No entries yet.")
