@@ -152,8 +152,8 @@ with st.form("daily_log_form", clear_on_submit=True):
 
     weight = st.number_input("Weight", min_value=0.0, step=0.1)
 
-    waist_in = st.number_input("Waist (in)", min_value=1.0, max_value=2.0, step=0.01)
-    waist_out = st.number_input("Waist (out)", min_value=1.0, max_value=2.0, step=0.01)
+    waist_in = st.number_input("Waist (in)", min_value=1.0, step=0.5)
+    waist_out = st.number_input("Waist (out)", min_value=1.0, step=0.5)
 
     st.subheader("Wellbeing")
 
