@@ -4,6 +4,8 @@
 
 import streamlit as st
 from datetime import datetime
+import gspread
+from google.oauth2.service_account import Credentials
 
 # --------------------------------------------------
 # Page config
@@ -15,6 +17,21 @@ st.set_page_config(
 )
 
 st.title("Exercise Activity")
+
+# --------------------------------------------------
+# Google Sheets connection
+# --------------------------------------------------
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+credentials = Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=SCOPES
+)
+
+gc = gspread.authorize(credentials)
+
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1JHcRPvNsl7og23GT-0AKNmoyD8BwFPP0UB_myJsvBcg"
+worksheet = gc.open_by_url(SHEET_URL).worksheet("activity_db")
 
 # --------------------------------------------------
 # Exercise selection
@@ -62,7 +79,19 @@ if st.button("Save Activity"):
         "date": datetime.today().isoformat()
     }
 
-    # Here you would typically append to Google Sheets or database
-    # For now, just show confirmation
-    st.success("Activity saved!")
+    # Append to Google Sheet
+    try:
+        worksheet.append_row([
+            entry["date"],
+            entry["timestamp"],
+            entry["exercise"],
+            str(entry["extras"]),
+            entry["duration"],
+            entry["wellbeing"]
+        ])
+        st.success("Activity saved to Google Sheets!")
+    except Exception as e:
+        st.error(f"Failed to save activity: {e}")
+
+    # Show the submitted data in app
     st.json(entry)
