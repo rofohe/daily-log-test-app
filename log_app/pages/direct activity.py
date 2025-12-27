@@ -95,3 +95,9 @@ if st.button("Save Activity"):
 
     # Show the submitted data in app
     st.json(entry)
+
+
+#test
+if st.button("Test Append"):
+    worksheet.append_row(["test", datetime.now().isoformat()])
+    st.success("Row appended!")
