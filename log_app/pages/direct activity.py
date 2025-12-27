@@ -62,4 +62,4 @@ if st.button("Save Activity"):
     except Exception as e:
         st.error(f"Failed to save activity: {e}")
 
-    st.json(entry)
+    #st.json(entry)
