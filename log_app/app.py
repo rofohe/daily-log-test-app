@@ -140,28 +140,31 @@ with st.form("daily_log_form", clear_on_submit=True):
             for comp in components:
                 if st.checkbox(comp, key=f"{category}_{comp}"):
                     checked.append(comp)
-                    
-                    # Special handling for "drank" in Sobriety
-                    if category == "Sobriety" and comp == "drank":
-                        st.markdown("#### What did you drink?")
-                        drink_types = []
-                        if st.checkbox("beer", key="drink_beer"):
-                            drink_types.append("beer")
-                        if st.checkbox("wine", key="drink_wine"):
-                            drink_types.append("wine")
-                        if st.checkbox("liquor", key="drink_liquor"):
-                            drink_types.append("liquor")
-                        
-                        st.markdown("#### Control level")
-                        control_level = st.select_slider(
-                            "From controlled to blackout",
-                            options=["Controlled", "Slightly buzzed", "Buzzed", "Drunk", "Very drunk", "Severely intoxicated", "Blackout"],
-                            value="Controlled",
-                            key="control_slider"
-                        )
-                        
-                        drinking_details["drink_types"] = drink_types
-                        drinking_details["control_level"] = control_level
+            
+            # Special handling for "drank" in Sobriety - show questions for the category
+            if category == "Sobriety":
+                st.markdown("#### Drinking details (if applicable)")
+                st.caption("Only fill this out if you checked 'drank' above")
+                
+                drink_types = []
+                if st.checkbox("beer", key="drink_beer"):
+                    drink_types.append("beer")
+                if st.checkbox("wine", key="drink_wine"):
+                    drink_types.append("wine")
+                if st.checkbox("liquor", key="drink_liquor"):
+                    drink_types.append("liquor")
+                
+                control_level = st.select_slider(
+                    "Control level: from controlled to blackout",
+                    options=["Controlled", "Slightly buzzed", "Buzzed", "Drunk", "Very drunk", "Severely intoxicated", "Blackout"],
+                    value="Controlled",
+                    key="control_slider"
+                )
+                
+                # Only save drinking details if "drank" was actually checked
+                if "drank" in checked:
+                    drinking_details["drink_types"] = drink_types
+                    drinking_details["control_level"] = control_level
 
             percent = int((len(checked) / len(components)) * 100)
             st.progress(percent)
