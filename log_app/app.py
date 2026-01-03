@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # --------------------------------------------------
 st.set_page_config(
     page_title="Daily Log",
-    page_icon="®",
+    page_icon="📝",
     layout="centered"
 )
 
@@ -41,7 +41,7 @@ if not df.empty:
     df["activities"] = df["activities"].fillna("")
 
 # --------------------------------------------------
-# Activity configuration (NEW)
+# Activity configuration
 # --------------------------------------------------
 ACTIVITIES = {
     "Sleep": ["deep sleep", "mindfulness", "rested"],
@@ -49,7 +49,7 @@ ACTIVITIES = {
     "Diet": ["hydrated", "fruits", "veggies", "not overeating", "supplements", "home made"],
     "Family & House": ["routines", "clean", "decorate", "play", "teach"],
     "Exercise": ["yoga", "pull ups", "biking", "hiking", "running"],
-    "Sobriety": ["abstinence", "special occasion", "controlled"],
+    "Sobriety": ["abstinence", "special occasion", "controlled", "drank"],
     "Productivity": ["reading", "journal notes", "german", "coding"],
     "Self-actualisation": ["confidence", "eye contact", "engaged", "agency", "happy"]
 }
@@ -130,6 +130,7 @@ with st.form("daily_log_form", clear_on_submit=True):
     st.subheader("Activities")
 
     activity_results = {}
+    drinking_details = {}
 
     for category, components in ACTIVITIES.items():
         with st.container():
@@ -139,6 +140,28 @@ with st.form("daily_log_form", clear_on_submit=True):
             for comp in components:
                 if st.checkbox(comp, key=f"{category}_{comp}"):
                     checked.append(comp)
+                    
+                    # Special handling for "drank" in Sobriety
+                    if category == "Sobriety" and comp == "drank":
+                        st.markdown("#### What did you drink?")
+                        drink_types = []
+                        if st.checkbox("beer", key="drink_beer"):
+                            drink_types.append("beer")
+                        if st.checkbox("wine", key="drink_wine"):
+                            drink_types.append("wine")
+                        if st.checkbox("liquor", key="drink_liquor"):
+                            drink_types.append("liquor")
+                        
+                        st.markdown("#### Control level")
+                        control_level = st.select_slider(
+                            "From controlled to blackout",
+                            options=["Controlled", "Slightly buzzed", "Buzzed", "Drunk", "Very drunk", "Severely intoxicated", "Blackout"],
+                            value="Controlled",
+                            key="control_slider"
+                        )
+                        
+                        drinking_details["drink_types"] = drink_types
+                        drinking_details["control_level"] = control_level
 
             percent = int((len(checked) / len(components)) * 100)
             st.progress(percent)
@@ -179,6 +202,16 @@ if submitted:
         for cat, comps in activity_results.items():
             if comps:
                 activity_strings.append(f"{cat}: {'|'.join(comps)}")
+        
+        # Add drinking details if present
+        if drinking_details:
+            drink_info = []
+            if drinking_details.get("drink_types"):
+                drink_info.append(f"types={','.join(drinking_details['drink_types'])}")
+            if drinking_details.get("control_level"):
+                drink_info.append(f"control={drinking_details['control_level']}")
+            if drink_info:
+                activity_strings.append(f"Drinking details: {'; '.join(drink_info)}")
 
         row = [
             now.isoformat(),
